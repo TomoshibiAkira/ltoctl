@@ -1,5 +1,7 @@
 # ltoctl
 
+** This project is not stable yet, use at your own responsibility. **
+
 Transparent, safety-first CLI for personal LTO cold archives. Payloads are
 ordinary streaming tar files. Canonical metadata is JSON/JSONL plus a
 rebuildable TSV search index. Tape bytes stay recoverable with `mt` and `tar`
