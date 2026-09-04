@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ltoctl"
+version = "0.1.0"
+description = "A transparent, safety-first CLI for personal LTO cold archives"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.9",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+ltoctl = "ltoctl.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["ltoctl*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-m 'not tape_hardware'"
+markers = [
+    "tape_hardware: tests requiring a real tape drive and a disposable test tape",
+]

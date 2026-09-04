@@ -1,0 +1,29 @@
+"""The narrow tape interface consumed by archive business logic."""
+
+from __future__ import annotations
+
+from io import BytesIO
+from typing import BinaryIO, Protocol, runtime_checkable
+
+from .status import TapeDriveStatus
+
+
+@runtime_checkable
+class TapeBackend(Protocol):
+    def status(self) -> TapeDriveStatus: ...
+
+    def rewind(self) -> None: ...
+
+    def eject(self) -> None: ...
+
+    def seek_eod(self) -> None: ...
+
+    def seek_file(self, file_no: int) -> None: ...
+
+    def current_file_no(self) -> int | None: ...
+
+    def read_tape_file(self) -> BinaryIO: ...
+
+    def write_tape_file(self) -> BinaryIO: ...
+
+    def finish_tape_file(self) -> None: ...
