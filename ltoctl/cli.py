@@ -296,6 +296,9 @@ def _echo_apply_progress(event: str, details: dict[str, object]) -> None:
         return
     if event == "start_writing":
         _typer_print("start writing")
+        return
+    if event == "ejected":
+        _typer_print("tape ejected")
 
 
 def _plan_estimate_lines(plan: Any) -> list[str]:

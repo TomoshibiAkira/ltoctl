@@ -153,16 +153,26 @@ class Phase3Tests(unittest.TestCase):
                 seen.append(group.group_no)
                 return tape_one if group.group_no == 1 else tape_two
 
-            result = apply_plan(store, tape_one, "guided", before_group=before_group)
+            events: list[str] = []
+            result = apply_plan(
+                store,
+                tape_one,
+                "guided",
+                before_group=before_group,
+                on_progress=lambda event, details, events=events: events.append(event),
+            )
             saved = store.load_plan("guided")
             self.assertEqual(result.status, "complete")
             self.assertEqual(seen, [1, 2])
+            self.assertEqual(events, ["start_writing", "ejected", "start_writing"])
             self.assertEqual(saved.execution.status, "complete")
             self.assertEqual([g.status for g in saved.execution.groups], ["complete", "complete"])
             self.assertEqual(len(tape_one.files), 2)
             self.assertEqual(len(tape_two.files), 2)
             archives = store.list_archives()
             self.assertEqual({archive.tape_id for archive in archives}, {"T-ONE", "T-TWO"})
+            self.assertFalse(tape_one.loaded)
+            self.assertTrue(tape_two.loaded)
 
     def test_group_selection_requires_previous_completion_and_wrong_tape_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -178,6 +188,7 @@ class Phase3Tests(unittest.TestCase):
             with self.assertRaises(PlannerError):
                 apply_plan(store, tape_one, "ordered", group_no=2)
             apply_plan(store, tape_one, "ordered", group_no=1)
+            self.assertFalse(tape_one.loaded)
             saved = store.load_plan("ordered")
             second_execution = saved.execution.groups[1]
             second_execution.status = "in_progress"
@@ -189,6 +200,7 @@ class Phase3Tests(unittest.TestCase):
                 apply_plan(store, tape_one, "ordered", group_no=2)
             result = apply_plan(store, tape_two, "ordered", group_no=2)
             self.assertEqual(result.status, "complete")
+            self.assertTrue(tape_two.loaded)
             no_op = apply_plan(store, tape_two, "ordered", group_no=2)
             self.assertEqual(no_op.skipped_units, [str(second)])
 

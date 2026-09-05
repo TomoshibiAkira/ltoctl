@@ -113,7 +113,7 @@ Do this with a **blank disposable cartridge** until you trust the workflow.
    ltoctl plan apply 2026-09 --group 1
    ```
 
-   You can still initialize separately with `ltoctl tape init HOME-001 --media lto6 --yes` if you prefer. JSON/scripted runs **must** pass `--group N`, and a blank cartridge needs `--init-tape HOME-001 --yes`. Interactive apply without `--group` prompts you to load the next tape.
+   You can still initialize separately with `ltoctl tape init HOME-001 --media lto6 --yes` if you prefer. JSON/scripted runs **must** pass `--group N`, and a blank cartridge needs `--init-tape HOME-001 --yes`. Interactive apply without `--group` prompts you to load the next tape and ejects after each group that is not the last.
 
 4. **Check**:
 
@@ -194,6 +194,7 @@ ltoctl plan apply august-2026 --group 1       # one group, no swap prompt
 ```
 
 - Each group binds to the **loaded** tape UUID on first use.
+- After a group finishes, if another group still needs writing, the cartridge is **ejected** so you can load the next tape. The last group of the plan is left loaded.
 - A blank cartridge (physical EOD at file 0) is offered for initialization instead of requiring a separate `tape init`. Used or corrupt media is never initialized this way.
 - Resume requires the **same** tape unless you remap.
 - Remap an unfinished group only with `--remap-group N --yes`, and only if that group has no completed units.

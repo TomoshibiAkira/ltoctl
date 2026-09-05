@@ -484,6 +484,30 @@ class PlanExecutor:
         self.store.save_plan(plan)
         return current_id, current_uuid, initialized_tape_id
 
+    def _eject_if_another_group_remains(
+        self,
+        plan: PlanRecord,
+        group: PlanGroup,
+        tape_id: str,
+        on_progress: OnApplyProgress | None,
+    ) -> None:
+        """Unload after a group when a later group still needs a different tape."""
+
+        if not any(
+            other.group_no > group.group_no and other.status != "complete"
+            for other in plan.execution.groups
+        ):
+            return
+        try:
+            self.backend.eject()
+        except TapeError:
+            raise
+        except Exception as exc:
+            raise TapeError(
+                f"cannot eject tape after plan group {group.group_no}: {exc}"
+            ) from exc
+        self._progress(on_progress, "ejected", group_no=group.group_no, tape_id=tape_id)
+
     def _group_targets(self, plan: PlanRecord, group_no: int | None) -> list[PlanGroup]:
         by_no = {group.group_no: group for group in plan.groups}
         if group_no is not None:
@@ -719,6 +743,7 @@ class PlanExecutor:
                 else "in_progress"
             )
             self.store.save_plan(record)
+            self._eject_if_another_group_remains(record, group, tape_id, on_progress)
 
         result.status = record.execution.status
         return result
